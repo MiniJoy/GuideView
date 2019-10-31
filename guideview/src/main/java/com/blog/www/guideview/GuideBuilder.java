@@ -3,13 +3,14 @@ package com.blog.www.guideview;
 import android.support.annotation.AnimatorRes;
 import android.support.annotation.IdRes;
 import android.support.annotation.IntRange;
+import android.support.annotation.Nullable;
 import android.view.View;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
- *
  * <h1>遮罩系统构建器
  * <p>
  * 本系统能够快速的为一个Activity里的任何一个View控件创建一个遮罩式的引导页。
@@ -45,7 +46,7 @@ import java.util.List;
 public class GuideBuilder {
 
     public enum SlideState {
-        UP,DOWN;
+        UP, DOWN
     }
 
     private Configuration mConfiguration;
@@ -55,8 +56,12 @@ public class GuideBuilder {
      */
     private boolean mBuilt;
 
-    private List<Component> mComponents = new ArrayList<Component>();
+    private List<Component> mComponents;
+
+    private HashMap<Component, Integer> mComponentTargetViewMap;
+
     private OnVisibilityChangedListener mOnVisibilityChangedListener;
+
     private OnSlideListener mOnSlideListener;
 
     /**
@@ -64,6 +69,11 @@ public class GuideBuilder {
      */
     public GuideBuilder() {
         mConfiguration = new Configuration();
+        mComponentTargetViewMap = new HashMap<>();
+        mComponents = new ArrayList<>();
+        mConfiguration.mTargetViewList = new ArrayList<>();
+        mConfiguration.mTargetViewIdList = new ArrayList<>();
+        mConfiguration.mGraphStyleList = new ArrayList<>();
     }
 
     /**
@@ -72,7 +82,7 @@ public class GuideBuilder {
      * @param alpha [0-255] 0 表示完全透明，255表示不透明
      * @return GuideBuilder
      */
-    public GuideBuilder setAlpha(@IntRange(from = 0, to = 255)  int alpha) {
+    public GuideBuilder setAlpha(@IntRange(from = 0, to = 255) int alpha) {
         if (mBuilt) {
             throw new BuildException("Already created. rebuild a new one.");
         } else if (alpha < 0 || alpha > 255) {
@@ -84,12 +94,20 @@ public class GuideBuilder {
 
     /**
      * 设置目标view
+     *
+     * 如果一个高亮区域对应一个component，建议使用此方法 同步传入component,将二者绑定
+     *
+     * 如果高亮区域和component不对应，可能一个高亮区域对应多个component，建议单独调用addcomponent()传入需要绑定的高亮区域索引
      */
-    public GuideBuilder setTargetView(View v) {
+    public GuideBuilder addTargetView(View v, int maskStyle, @Nullable Component guideComponent) {
         if (mBuilt) {
             throw new BuildException("Already created. rebuild a new one.");
         }
-        mConfiguration.mTargetView = v;
+        mConfiguration.mTargetViewList.add(v);
+        setHighTargetGraphStyle(maskStyle);
+        if (guideComponent != null) {
+            addComponent(guideComponent, mConfiguration.mTargetViewList.indexOf(v));
+        }
         return this;
     }
 
@@ -103,7 +121,7 @@ public class GuideBuilder {
         if (mBuilt) {
             throw new BuildException("Already created. rebuild a new one.");
         }
-        mConfiguration.mTargetViewId = id;
+        mConfiguration.mTargetViewIdList.add(id);
         return this;
     }
 
@@ -127,11 +145,11 @@ public class GuideBuilder {
      *
      * @return GuideBuilder
      */
-    public GuideBuilder setHighTargetGraphStyle(int style) {
+    private GuideBuilder setHighTargetGraphStyle(int style) {
         if (mBuilt) {
             throw new BuildException("Already created. rebuild a new one.");
         }
-        mConfiguration.mGraphStyle = style;
+        mConfiguration.mGraphStyleList.add(style);
         return this;
     }
 
@@ -206,16 +224,21 @@ public class GuideBuilder {
     }
 
     /**
-     * 添加一个控件
+     * 添加一个控件及对应的目标高亮view
      *
-     * @param component 被添加的控件
+     * @param component       被添加的控件
+     * @param targetViewIndex 目标view索引
      * @return GuideBuilder
      */
-    public GuideBuilder addComponent(Component component) {
+    public GuideBuilder addComponent(Component component, int targetViewIndex) {
         if (mBuilt) {
             throw new BuildException("Already created, rebuild a new one.");
         }
         mComponents.add(component);
+        if ((targetViewIndex < mConfiguration.mTargetViewList.size()
+                || targetViewIndex < mConfiguration.mTargetViewIdList.size())) {
+            mComponentTargetViewMap.put(component, targetViewIndex);
+        }
         return this;
     }
 
@@ -337,6 +360,7 @@ public class GuideBuilder {
         Guide guide = new Guide();
         Component[] components = new Component[mComponents.size()];
         guide.setComponents(mComponents.toArray(components));
+        guide.setComponentTargetViewMap(mComponentTargetViewMap);
         guide.setConfiguration(mConfiguration);
         guide.setCallback(mOnVisibilityChangedListener);
         guide.setOnSlideListener(mOnSlideListener);

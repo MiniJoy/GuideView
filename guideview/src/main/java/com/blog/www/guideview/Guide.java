@@ -2,12 +2,17 @@ package com.blog.www.guideview;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Rect;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * 遮罩系统的封装 <br>
@@ -26,12 +31,24 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
      * 滑动临界值
      */
     private static final int SLIDE_THRESHOLD = 30;
+
     private Configuration mConfiguration;
+
     private MaskView mMaskView;
+
     private Component[] mComponents;
+
+    //自定义component和其需要依赖定位的高亮区域view的map
+    private HashMap<Component, Integer> mComponentTargetViewMap;
+
+    //自定义component转化为view之后和其需要依赖定位的高亮区域view的map
+    private HashMap<View, Integer> mViewTargetViewHashMap;
+
     // 根据locInwindow定位后，是否需要判断loc值非0
     private boolean mShouldCheckLocInWindow = true;
+
     private GuideBuilder.OnVisibilityChangedListener mOnVisibilityChangedListener;
+
     private GuideBuilder.OnSlideListener mOnSlideListener;
 
     void setConfiguration(Configuration configuration) {
@@ -40,6 +57,11 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
 
     void setComponents(Component[] components) {
         mComponents = components;
+    }
+
+    void setComponentTargetViewMap(
+            HashMap<Component, Integer> componentTargetViewMap) {
+        mComponentTargetViewMap = componentTargetViewMap;
     }
 
     void setCallback(GuideBuilder.OnVisibilityChangedListener listener) {
@@ -70,10 +92,11 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
         if (overlay == null) {
             overlay = (ViewGroup) activity.getWindow().getDecorView();
         }
-        if (mMaskView.getParent() == null && mConfiguration.mTargetView != null) {
+        if (mMaskView.getParent() == null && mConfiguration.mTargetViewList != null) {
             overlay.addView(mMaskView);
             if (mConfiguration.mEnterAnimationId != -1) {
-                Animation anim = AnimationUtils.loadAnimation(activity, mConfiguration.mEnterAnimationId);
+                Animation anim = AnimationUtils
+                        .loadAnimation(activity, mConfiguration.mEnterAnimationId);
                 assert anim != null;
                 anim.setAnimationListener(new Animation.AnimationListener() {
                     @Override
@@ -182,7 +205,7 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
         maskView.setPaddingTop(mConfiguration.mPaddingTop);
         maskView.setPaddingRight(mConfiguration.mPaddingRight);
         maskView.setPaddingBottom(mConfiguration.mPaddingBottom);
-        maskView.setHighTargetGraphStyle(mConfiguration.mGraphStyle);
+        maskView.setHighTargetGraphStyle(mConfiguration.mGraphStyleList);
         maskView.setOverlayTarget(mConfiguration.mOverlayTarget);
         maskView.setOnKeyListener(this);
 
@@ -197,14 +220,22 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
             parentY = loc[1];
         }
 
-        if (mConfiguration.mTargetView != null) {
-            maskView.setTargetRect(Common.getViewAbsRect(mConfiguration.mTargetView, parentX, parentY));
+        if (mConfiguration.mTargetViewList != null) {
+            List<Rect> rects = new ArrayList<>(mConfiguration.mTargetViewList.size());
+            for (View targetView : mConfiguration.mTargetViewList) {
+                rects.add(Common.getViewAbsRect(targetView, parentX, parentY));
+            }
+            maskView.setTargetRectList(rects);
         } else {
             // Gets the target view's abs rect
-            View target = activity.findViewById(mConfiguration.mTargetViewId);
-            if (target != null) {
-                maskView.setTargetRect(Common.getViewAbsRect(target, parentX, parentY));
+            List<Rect> rects = new ArrayList<>(mConfiguration.mTargetViewIdList.size());
+            for (Integer id : mConfiguration.mTargetViewIdList) {
+                View target = activity.findViewById(id);
+                if (target != null) {
+                    rects.add(Common.getViewAbsRect(target, parentX, parentY));
+                }
             }
+            maskView.setTargetRectList(rects);
         }
 
         if (mConfiguration.mOutsideTouchable) {
@@ -214,9 +245,15 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
         }
 
         // Adds the components to the mask view.
+        mViewTargetViewHashMap = new HashMap<>();
         for (Component c : mComponents) {
-            maskView.addView(Common.componentToView(activity.getLayoutInflater(), c));
+            View componentView = Common.componentToView(activity.getLayoutInflater(), c);
+            if (mComponentTargetViewMap != null && mComponentTargetViewMap.containsKey(c)) {
+                mViewTargetViewHashMap.put(componentView, mComponentTargetViewMap.get(c));
+            }
+            maskView.addView(componentView);
         }
+        maskView.setComponentViewTargetViewMap(mViewTargetViewHashMap);
 
         return maskView;
     }
@@ -224,6 +261,8 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
     private void onDestroy() {
         mConfiguration = null;
         mComponents = null;
+        mComponentTargetViewMap = null;
+        mViewTargetViewHashMap = null;
         mOnVisibilityChangedListener = null;
         mOnSlideListener = null;
         mMaskView.removeAllViews();
@@ -254,7 +293,8 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
                 if (mOnSlideListener != null) {
                     mOnSlideListener.onSlideListener(GuideBuilder.SlideState.UP);
                 }
-            } else if (motionEvent.getY() - startY > DimenUtil.dp2px(view.getContext(), SLIDE_THRESHOLD)) {
+            } else if (motionEvent.getY() - startY > DimenUtil
+                    .dp2px(view.getContext(), SLIDE_THRESHOLD)) {
                 if (mOnSlideListener != null) {
                     mOnSlideListener.onSlideListener(GuideBuilder.SlideState.DOWN);
                 }

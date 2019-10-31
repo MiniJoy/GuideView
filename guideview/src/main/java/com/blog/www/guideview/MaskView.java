@@ -15,6 +15,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
 /**
@@ -22,10 +27,12 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
  */
 
 class MaskView extends ViewGroup {
+
     /**
      * 高亮区域
      */
-    private final RectF mTargetRect = new RectF();
+    private List<RectF> mTargetRectList = new ArrayList<>();
+
     /**
      * 蒙层区域
      */
@@ -35,35 +42,49 @@ class MaskView extends ViewGroup {
      * 中间变量
      */
     private final RectF mChildTmpRect = new RectF();
+
     /**
      * 蒙层背景画笔
      */
     private final Paint mFullingPaint;
+
     private int mPadding = 0;
+
     private int mPaddingLeft = 0;
+
     private int mPaddingTop = 0;
+
     private int mPaddingRight = 0;
+
     private int mPaddingBottom = 0;
+
+    private HashMap<View, Integer> mComponentViewTargetViewMap;
+
     /**
      * 是否覆盖目标区域
      */
     private boolean mOverlayTarget = false;
+
     /**
      * 圆角大小
      */
     private int mCorner = 0;
+
     /**
      * 目标区域样式，默认为矩形
      */
-    private int mStyle = Component.ROUNDRECT;
+    private List<Integer> mStyleList = new ArrayList<>();
+
     /**
      * 挖空画笔
      */
     private Paint mEraser;
+
     /**
      * 橡皮擦Bitmap
      */
     private Bitmap mEraserBitmap;
+
     /**
      * 橡皮擦Cavas
      */
@@ -72,8 +93,26 @@ class MaskView extends ViewGroup {
     private boolean ignoreRepadding;
 
     private int mInitHeight;
+
     private int mChangedHeight = 0;
+
     private boolean mFirstFlag = true;
+
+    private List<Float> mRectLeftList;
+
+    private List<Float> mRectRightList;
+
+    private List<Float> mRectTopList;
+
+    private List<Float> mRectBottomList;
+
+    private float mMostLeft;
+
+    private float mMostRight;
+
+    private float mMostTop;
+
+    private float mMostBottom;
 
     public MaskView(Context context) {
         this(context, null, 0);
@@ -103,6 +142,11 @@ class MaskView extends ViewGroup {
         mEraser.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
         //位图抗锯齿设置
         mEraser.setFlags(Paint.ANTI_ALIAS_FLAG);
+        mComponentViewTargetViewMap = new HashMap<>();
+        mRectLeftList = new ArrayList<>(mTargetRectList.size());
+        mRectRightList = new ArrayList<>(mTargetRectList.size());
+        mRectTopList = new ArrayList<>(mTargetRectList.size());
+        mRectBottomList = new ArrayList<>(mTargetRectList.size());
     }
 
     @Override
@@ -161,75 +205,181 @@ class MaskView extends ViewGroup {
             if (lp == null) {
                 continue;
             }
-            switch (lp.targetAnchor) {
-                case LayoutParams.ANCHOR_LEFT://左
-                    mChildTmpRect.right = mTargetRect.left;
-                    mChildTmpRect.left = mChildTmpRect.right - child.getMeasuredWidth();
-                    verticalChildPositionLayout(child, mChildTmpRect, lp.targetParentPosition);
-                    break;
-                case LayoutParams.ANCHOR_TOP://上
-                    mChildTmpRect.bottom = mTargetRect.top;
-                    mChildTmpRect.top = mChildTmpRect.bottom - child.getMeasuredHeight();
-                    horizontalChildPositionLayout(child, mChildTmpRect, lp.targetParentPosition);
-                    break;
-                case LayoutParams.ANCHOR_RIGHT://右
-                    mChildTmpRect.left = mTargetRect.right;
-                    mChildTmpRect.right = mChildTmpRect.left + child.getMeasuredWidth();
-                    verticalChildPositionLayout(child, mChildTmpRect, lp.targetParentPosition);
-                    break;
-                case LayoutParams.ANCHOR_BOTTOM://下
-                    mChildTmpRect.top = mTargetRect.bottom;
-                    mChildTmpRect.bottom = mChildTmpRect.top + child.getMeasuredHeight();
-                    horizontalChildPositionLayout(child, mChildTmpRect, lp.targetParentPosition);
-                    break;
-                case LayoutParams.ANCHOR_OVER://中心
-                    mChildTmpRect.left = ((int) mTargetRect.width() - child.getMeasuredWidth()) >> 1;
-                    mChildTmpRect.top = ((int) mTargetRect.height() - child.getMeasuredHeight()) >> 1;
-                    mChildTmpRect.right = ((int) mTargetRect.width() + child.getMeasuredWidth()) >> 1;
-                    mChildTmpRect.bottom = ((int) mTargetRect.height() + child.getMeasuredHeight()) >> 1;
-                    mChildTmpRect.offset(mTargetRect.left, mTargetRect.top);
-                    break;
+            if (lp.positionPattern == LayoutParams.GLOBAL_POSITION_PATTERN) { //基于全局高亮区域定位
+                globalPosition(lp, child);
+            } else { //分别定位
+                if (mComponentViewTargetViewMap != null && mComponentViewTargetViewMap.size() > 0) {
+                    if (mComponentViewTargetViewMap.containsKey(child)) {
+                        singlePosition(lp, child, mComponentViewTargetViewMap.get(child));
+                    } else { //单独定位 但没有成功传入需要依赖定位的基准高亮区域，让其全局定位
+                        globalPosition(lp, child);
+                    }
+                }
             }
             //额外的xy偏移
             mChildTmpRect.offset((int) (density * lp.offsetX + 0.5f),
                     (int) (density * lp.offsetY + 0.5f));
-            child.layout((int) mChildTmpRect.left, (int) mChildTmpRect.top, (int) mChildTmpRect.right,
+            child.layout((int) mChildTmpRect.left, (int) mChildTmpRect.top,
+                    (int) mChildTmpRect.right,
                     (int) mChildTmpRect.bottom);
         }
     }
 
-    private void horizontalChildPositionLayout(View child, RectF rect, int targetParentPosition) {
-        switch (targetParentPosition) {
+    private void singlePosition(LayoutParams lp, View child, int i) {
+        switch (lp.targetAnchor) {
+            case LayoutParams.ANCHOR_LEFT://左
+                mChildTmpRect.right = mTargetRectList.get(i).left;
+                mChildTmpRect.left = mChildTmpRect.right - child.getMeasuredWidth();
+                singleVerticalChildPositionLayout(child, mChildTmpRect, lp, i);
+                break;
+            case LayoutParams.ANCHOR_TOP://上
+                mChildTmpRect.bottom = mTargetRectList.get(i).top;
+                mChildTmpRect.top = mChildTmpRect.bottom - child.getMeasuredHeight();
+                singleHorizontalChildPositionLayout(child, mChildTmpRect, lp, i);
+                break;
+            case LayoutParams.ANCHOR_RIGHT://右
+                mChildTmpRect.left = mTargetRectList.get(i).right;
+                mChildTmpRect.right = mChildTmpRect.left + child.getMeasuredWidth();
+                singleVerticalChildPositionLayout(child, mChildTmpRect, lp, i);
+                break;
+            case LayoutParams.ANCHOR_BOTTOM://下
+                mChildTmpRect.top = mTargetRectList.get(i).bottom;
+                mChildTmpRect.bottom = mChildTmpRect.top + child.getMeasuredHeight();
+                singleHorizontalChildPositionLayout(child, mChildTmpRect, lp, i);
+                break;
+            case LayoutParams.ANCHOR_OVER://中心
+                mChildTmpRect.left =
+                        ((int) mTargetRectList.get(i).width() - child.getMeasuredWidth())
+                                >> 1;
+                mChildTmpRect.top =
+                        ((int) mTargetRectList.get(i).height() - child.getMeasuredHeight())
+                                >> 1;
+                mChildTmpRect.right =
+                        ((int) mTargetRectList.get(i).width() + child.getMeasuredWidth())
+                                >> 1;
+                mChildTmpRect.bottom =
+                        ((int) mTargetRectList.get(i).height() + child.getMeasuredHeight())
+                                >> 1;
+                mChildTmpRect.offset(mTargetRectList.get(i).left, mTargetRectList.get(i).top);
+                break;
+        }
+    }
+
+    private void globalPosition(LayoutParams lp, View child) {
+        for (RectF rectF : mTargetRectList) {
+            mRectLeftList.add(rectF.left);
+            mRectRightList.add(rectF.right);
+            mRectTopList.add(rectF.top);
+            mRectBottomList.add(rectF.bottom);
+        }
+        mMostLeft = Collections.max(mRectLeftList);
+        mMostRight = Collections.max(mRectRightList);
+        mMostTop = Collections.max(mRectTopList);
+        mMostBottom = Collections.max(mRectBottomList);
+        switch (lp.targetAnchor) {
+            case LayoutParams.ANCHOR_LEFT://左
+                mChildTmpRect.right = mMostLeft;
+                mChildTmpRect.left = mChildTmpRect.right - child.getMeasuredWidth();
+                globalVerticalChildPositionLayout(child, mChildTmpRect, lp);
+                break;
+            case LayoutParams.ANCHOR_TOP://上
+                mChildTmpRect.bottom = mMostTop;
+                mChildTmpRect.top = mChildTmpRect.bottom - child.getMeasuredHeight();
+                globalHorizontalChildPositionLayout(child, mChildTmpRect, lp);
+                break;
+            case LayoutParams.ANCHOR_RIGHT://右
+                mChildTmpRect.left = mMostRight;
+                mChildTmpRect.right = mChildTmpRect.left + child.getMeasuredWidth();
+                globalVerticalChildPositionLayout(child, mChildTmpRect, lp);
+                break;
+            case LayoutParams.ANCHOR_BOTTOM://下
+                mChildTmpRect.top = mMostBottom;
+                mChildTmpRect.bottom = mChildTmpRect.top + child.getMeasuredHeight();
+                globalHorizontalChildPositionLayout(child, mChildTmpRect, lp);
+                break;
+            case LayoutParams.ANCHOR_OVER://中心
+                mChildTmpRect.left = ((int) (mMostRight - mMostLeft) - child.getMeasuredWidth())
+                        >> 1;
+                mChildTmpRect.top = ((int) (mMostBottom - mMostTop) - child.getMeasuredHeight())
+                        >> 1;
+                mChildTmpRect.right = ((int) (mMostRight - mMostLeft) + child.getMeasuredWidth())
+                        >> 1;
+                mChildTmpRect.bottom = ((int) (mMostBottom - mMostTop) + child.getMeasuredHeight())
+                        >> 1;
+                mChildTmpRect.offset(mMostLeft, mMostTop);
+                break;
+        }
+    }
+
+    private void singleHorizontalChildPositionLayout(View child, RectF rect, LayoutParams lp,
+            int i) {
+        switch (lp.targetParentPosition) {
             case LayoutParams.PARENT_START:
-                rect.left = mTargetRect.left;
+                rect.left = mTargetRectList.get(i).left;
                 rect.right = rect.left + child.getMeasuredWidth();
                 break;
             case LayoutParams.PARENT_CENTER:
-                rect.left = (mTargetRect.width() - child.getMeasuredWidth()) / 2;
-                rect.right = (mTargetRect.width() + child.getMeasuredWidth()) / 2;
-                rect.offset(mTargetRect.left, 0);
+                rect.left = (mTargetRectList.get(i).width() - child.getMeasuredWidth()) / 2;
+                rect.right = (mTargetRectList.get(i).width() + child.getMeasuredWidth()) / 2;
+                rect.offset(mTargetRectList.get(i).left, 0);
                 break;
             case LayoutParams.PARENT_END:
-                rect.right = mTargetRect.right;
+                rect.right = mTargetRectList.get(i).right;
                 rect.left = rect.right - child.getMeasuredWidth();
                 break;
         }
     }
 
-    private void verticalChildPositionLayout(View child, RectF rect, int targetParentPosition) {
-        switch (targetParentPosition) {
+    private void globalHorizontalChildPositionLayout(View child, RectF rect, LayoutParams lp) {
+        switch (lp.targetParentPosition) {
             case LayoutParams.PARENT_START:
-                rect.top = mTargetRect.top;
+                rect.left = mMostLeft;
+                rect.right = rect.left + child.getMeasuredWidth();
+                break;
+            case LayoutParams.PARENT_CENTER:
+                rect.left = ((mMostRight - mMostLeft) - child.getMeasuredWidth()) / 2;
+                rect.right = ((mMostRight - mMostLeft) + child.getMeasuredWidth()) / 2;
+                rect.offset(mMostLeft, 0);
+                break;
+            case LayoutParams.PARENT_END:
+                rect.right = mMostRight;
+                rect.left = rect.right - child.getMeasuredWidth();
+                break;
+        }
+    }
+
+    private void globalVerticalChildPositionLayout(View child, RectF rect, LayoutParams lp) {
+        switch (lp.targetParentPosition) {
+            case LayoutParams.PARENT_START:
+                rect.top = mMostTop;
                 rect.bottom = rect.top + child.getMeasuredHeight();
                 break;
             case LayoutParams.PARENT_CENTER:
-                rect.top = (mTargetRect.width() - child.getMeasuredHeight()) / 2;
-                rect.bottom = (mTargetRect.width() + child.getMeasuredHeight()) / 2;
-                rect.offset(0, mTargetRect.top);
+                rect.top = ((mMostBottom - mMostTop) - child.getMeasuredHeight()) / 2;
+                rect.bottom = ((mMostBottom - mMostTop) + child.getMeasuredHeight()) / 2;
+                rect.offset(0, mMostTop);
                 break;
             case LayoutParams.PARENT_END:
-                rect.bottom = mTargetRect.bottom;
-                rect.top = mTargetRect.bottom - child.getMeasuredHeight();
+                rect.bottom = mMostBottom;
+                rect.top = mMostBottom - child.getMeasuredHeight();
+                break;
+        }
+    }
+
+    private void singleVerticalChildPositionLayout(View child, RectF rect, LayoutParams lp, int i) {
+        switch (lp.targetParentPosition) {
+            case LayoutParams.PARENT_START:
+                rect.top = mTargetRectList.get(i).top;
+                rect.bottom = rect.top + child.getMeasuredHeight();
+                break;
+            case LayoutParams.PARENT_CENTER:
+                rect.top = (mTargetRectList.get(i).height() - child.getMeasuredHeight()) / 2;
+                rect.bottom = (mTargetRectList.get(i).height() + child.getMeasuredHeight()) / 2;
+                rect.offset(0, mTargetRectList.get(i).top);
+                break;
+            case LayoutParams.PARENT_END:
+                rect.bottom = mTargetRectList.get(i).bottom;
+                rect.top = mTargetRectList.get(i).bottom - child.getMeasuredHeight();
                 break;
         }
     }
@@ -244,28 +394,28 @@ class MaskView extends ViewGroup {
     private void resetPadding() {
         if (!ignoreRepadding) {
             if (mPadding != 0 && mPaddingLeft == 0) {
-                mTargetRect.left -= mPadding;
+                mMostLeft -= mPadding;
             }
             if (mPadding != 0 && mPaddingTop == 0) {
-                mTargetRect.top -= mPadding;
+                mMostTop -= mPadding;
             }
             if (mPadding != 0 && mPaddingRight == 0) {
-                mTargetRect.right += mPadding;
+                mMostRight += mPadding;
             }
             if (mPadding != 0 && mPaddingBottom == 0) {
-                mTargetRect.bottom += mPadding;
+                mMostBottom += mPadding;
             }
             if (mPaddingLeft != 0) {
-                mTargetRect.left -= mPaddingLeft;
+                mMostLeft -= mPaddingLeft;
             }
             if (mPaddingTop != 0) {
-                mTargetRect.top -= mPaddingTop;
+                mMostTop -= mPaddingTop;
             }
             if (mPaddingRight != 0) {
-                mTargetRect.right += mPaddingRight;
+                mMostRight += mPaddingRight;
             }
             if (mPaddingBottom != 0) {
-                mTargetRect.bottom += mPaddingBottom;
+                mMostBottom += mPaddingBottom;
             }
             ignoreRepadding = true;
         }
@@ -293,32 +443,38 @@ class MaskView extends ViewGroup {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (mChangedHeight != 0) {
-            mTargetRect.offset(0, mChangedHeight);
-            mInitHeight = mInitHeight + mChangedHeight;
-            mChangedHeight = 0;
-        }
         mEraserBitmap.eraseColor(Color.TRANSPARENT);
         mEraserCanvas.drawColor(mFullingPaint.getColor());
-        if (!mOverlayTarget) {
-            switch (mStyle) {
-                case Component.ROUNDRECT:
-                    mEraserCanvas.drawRoundRect(mTargetRect, mCorner, mCorner, mEraser);
-                    break;
-                case Component.CIRCLE:
-                    mEraserCanvas.drawCircle(mTargetRect.centerX(), mTargetRect.centerY(),
-                            mTargetRect.width() / 2, mEraser);
-                    break;
-                default:
-                    mEraserCanvas.drawRoundRect(mTargetRect, mCorner, mCorner, mEraser);
-                    break;
+        for (RectF targetRect : mTargetRectList) {
+            if (mChangedHeight != 0) {
+                targetRect.offset(0, mChangedHeight);
+                mInitHeight = mInitHeight + mChangedHeight;
+                mChangedHeight = 0;
+            }
+            if (!mOverlayTarget) {
+                switch (mStyleList.get(mTargetRectList.indexOf(targetRect))) {
+                    case Component.ROUNDRECT:
+                        mEraserCanvas.drawRoundRect(targetRect, mCorner, mCorner, mEraser);
+                        break;
+                    case Component.CIRCLE:
+                        mEraserCanvas.drawCircle(targetRect.centerX(), targetRect.centerY(),
+                                targetRect.width() / 2, mEraser);
+                        break;
+                    default:
+                        mEraserCanvas.drawRoundRect(targetRect, mCorner, mCorner, mEraser);
+                        break;
+                }
             }
         }
         canvas.drawBitmap(mEraserBitmap, mOverlayRect.left, mOverlayRect.top, null);
     }
 
-    public void setTargetRect(Rect rect) {
-        mTargetRect.set(rect);
+    public void setTargetRectList(List<Rect> rectList) {
+        for (Rect rect : rectList) {
+            RectF rectF = new RectF();
+            rectF.set(rect);
+            mTargetRectList.add(rectF);
+        }
     }
 
     public void setFullingAlpha(int alpha) {
@@ -333,8 +489,8 @@ class MaskView extends ViewGroup {
         this.mCorner = corner;
     }
 
-    public void setHighTargetGraphStyle(int style) {
-        this.mStyle = style;
+    public void setHighTargetGraphStyle(List<Integer> styleList) {
+        this.mStyleList = styleList;
     }
 
     public void setOverlayTarget(boolean b) {
@@ -361,22 +517,41 @@ class MaskView extends ViewGroup {
         this.mPaddingBottom = paddingBottom;
     }
 
+    public void setComponentViewTargetViewMap(HashMap<View, Integer> viewTargetViewHashMap) {
+        this.mComponentViewTargetViewMap = viewTargetViewHashMap;
+    }
+
     static class LayoutParams extends ViewGroup.LayoutParams {
 
-        public static final int ANCHOR_LEFT = 0x01;
-        public static final int ANCHOR_TOP = 0x02;
-        public static final int ANCHOR_RIGHT = 0x03;
-        public static final int ANCHOR_BOTTOM = 0x04;
-        public static final int ANCHOR_OVER = 0x05;
+        static final int ANCHOR_LEFT = 0x01;
 
-        public static final int PARENT_START = 0x10;
-        public static final int PARENT_CENTER = 0x20;
-        public static final int PARENT_END = 0x30;
+        static final int ANCHOR_TOP = 0x02;
 
-        public int targetAnchor = ANCHOR_BOTTOM;
-        public int targetParentPosition = PARENT_CENTER;
-        public int offsetX = 0;
-        public int offsetY = 0;
+        static final int ANCHOR_RIGHT = 0x03;
+
+        static final int ANCHOR_BOTTOM = 0x04;
+
+        static final int ANCHOR_OVER = 0x05;
+
+        static final int PARENT_START = 0x10;
+
+        static final int PARENT_CENTER = 0x20;
+
+        static final int PARENT_END = 0x30;
+
+        static final int GLOBAL_POSITION_PATTERN = 0;
+
+        static final int SINGLE_POSITION_PATTERN = 1;
+
+        int targetAnchor = ANCHOR_BOTTOM;
+
+        int targetParentPosition = PARENT_CENTER;
+
+        int offsetX = 0;
+
+        int offsetY = 0;
+
+        int positionPattern = SINGLE_POSITION_PATTERN;
 
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
