@@ -20,39 +20,6 @@ import android.view.View;
 
 public interface Component {
 
-    int FIT_START = MaskView.LayoutParams.PARENT_START;
-
-    int FIT_END = MaskView.LayoutParams.PARENT_END;
-
-    int FIT_CENTER = MaskView.LayoutParams.PARENT_CENTER;
-
-    int ANCHOR_LEFT = MaskView.LayoutParams.ANCHOR_LEFT;
-
-    int ANCHOR_RIGHT = MaskView.LayoutParams.ANCHOR_RIGHT;
-
-    int ANCHOR_BOTTOM = MaskView.LayoutParams.ANCHOR_BOTTOM;
-
-    int ANCHOR_TOP = MaskView.LayoutParams.ANCHOR_TOP;
-
-    int ANCHOR_OVER = MaskView.LayoutParams.ANCHOR_OVER;
-
-    /**
-     * 圆角矩形&矩形
-     */
-    int ROUNDRECT = 0;
-
-    /**
-     * 圆形
-     */
-    int CIRCLE = 1;
-
-    /**
-     * Component定位方式
-     */
-    int GLOBAL_POSITION_PATTERN = MaskView.LayoutParams.GLOBAL_POSITION_PATTERN;
-
-    int SINGLE_POSITION_PATTERN = MaskView.LayoutParams.SINGLE_POSITION_PATTERN;
-
     /**
      * 需要显示的view
      *
@@ -64,16 +31,22 @@ public interface Component {
     /**
      * 相对目标View的锚点
      *
-     * @return could be {@link #ANCHOR_LEFT}, {@link #ANCHOR_RIGHT},
-     * {@link #ANCHOR_TOP}, {@link #ANCHOR_BOTTOM}, {@link #ANCHOR_OVER}
+     * @return could be
+     * {@link Constants.TargetAnchor#ANCHOR_LEFT},
+     * {@link Constants.TargetAnchor#ANCHOR_RIGHT},
+     * {@link Constants.TargetAnchor#ANCHOR_TOP},
+     * {@link Constants.TargetAnchor#ANCHOR_BOTTOM},
+     * {@link Constants.TargetAnchor#ANCHOR_OVER}
      */
     int getAnchor();
 
     /**
      * 相对目标View的对齐
      *
-     * @return could be {@link #FIT_START}, {@link #FIT_END},
-     * {@link #FIT_CENTER}
+     * @return could be
+     * {@link Constants.TargetAnchor#PARENT_START},
+     * {@link Constants.TargetAnchor#PARENT_END},
+     * {@link Constants.TargetAnchor#PARENT_CENTER}
      */
     int getFitPosition();
 

@@ -1,10 +1,12 @@
 package com.demo.aty;
 
-import com.blog.www.guideview.Component;
+import com.blog.www.guideview.Configuration;
+import com.blog.www.guideview.Constants;
 import com.blog.www.guideview.Guide;
 import com.blog.www.guideview.GuideBuilder;
 import com.demo.component.LottieComponent;
 import com.demo.guide.R;
+import com.demo.utils.ScreenUtils;
 
 import android.app.Activity;
 import android.content.Context;
@@ -44,7 +46,7 @@ public class MyListActivity extends Activity {
         listView.setAdapter(adapter);
     }
 
-    private static class MyAdapter extends BaseAdapter {
+    public static class MyAdapter extends BaseAdapter {
 
         private Context mContext;
 
@@ -81,7 +83,7 @@ public class MyListActivity extends Activity {
                 holder = (ViewHolder) view.getTag();
             }
             holder.btn.setText(arrayList.get(i));
-            if (i == 5 && showTimes == 0) {
+            if ((i == 5 || i == 2) && showTimes == 0) {
                 final View finalView = view;
                 view.post(new Runnable() {
                     @Override
@@ -96,10 +98,14 @@ public class MyListActivity extends Activity {
         public void showGuideView(View targetView) {
             showTimes++;
             GuideBuilder builder = new GuideBuilder();
-            builder.addTargetView(targetView, Component.CIRCLE, new LottieComponent())
+            Configuration.HighLightAreaConfiguration configuration
+                    = Configuration.HighLightAreaConfiguration
+                    .builder()
+                    .setPadding(ScreenUtils.dip2px(showTimes == 1 ? 20 : 40))
+                    .setGraphStyle(Constants.GraphStyle.CIRCLE)
+                    .build();
+            builder.addTargetView(targetView, configuration, new LottieComponent())
                     .setAlpha(150)
-                    .setHighTargetCorner(20)
-                    .setHighTargetPadding(10)
                     .setOverlayTarget(false)
                     .setOutsideTouchable(false);
             builder.setOnVisibilityChangedListener(new GuideBuilder.OnVisibilityChangedListener() {

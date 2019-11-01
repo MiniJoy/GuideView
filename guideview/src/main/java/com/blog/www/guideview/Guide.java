@@ -199,13 +199,7 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
         MaskView maskView = new MaskView(activity);
         maskView.setFullingColor(activity.getResources().getColor(mConfiguration.mFullingColorId));
         maskView.setFullingAlpha(mConfiguration.mAlpha);
-        maskView.setHighTargetCorner(mConfiguration.mCorner);
-        maskView.setPadding(mConfiguration.mPadding);
-        maskView.setPaddingLeft(mConfiguration.mPaddingLeft);
-        maskView.setPaddingTop(mConfiguration.mPaddingTop);
-        maskView.setPaddingRight(mConfiguration.mPaddingRight);
-        maskView.setPaddingBottom(mConfiguration.mPaddingBottom);
-        maskView.setHighTargetGraphStyle(mConfiguration.mGraphStyleList);
+        maskView.setHighTargetConfigutation(mConfiguration.mHighLightConfigurationList);
         maskView.setOverlayTarget(mConfiguration.mOverlayTarget);
         maskView.setOnKeyListener(this);
 

@@ -1,12 +1,14 @@
 package com.demo.aty;
 
-import com.blog.www.guideview.Component;
+import com.blog.www.guideview.Configuration;
+import com.blog.www.guideview.Constants;
 import com.blog.www.guideview.Guide;
 import com.blog.www.guideview.GuideBuilder;
 import com.demo.component.LottieComponent;
 import com.demo.component.MutiComponent;
 import com.demo.component.SimpleComponent;
 import com.demo.guide.R;
+import com.demo.utils.ScreenUtils;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -44,10 +46,15 @@ public class SimpleGuideViewActivity extends Activity {
 
     public void showGuideView() {
         GuideBuilder builder = new GuideBuilder();
-        builder.addTargetView(header_imgbtn, Component.ROUNDRECT, new SimpleComponent())
-                .setAlpha(150)
-                .setHighTargetCorner(20)
-                .setHighTargetPadding(10);
+        Configuration.HighLightAreaConfiguration configuration
+                = Configuration.HighLightAreaConfiguration
+                .builder()
+                .setPadding(ScreenUtils.dip2px(10))
+                .setCorner(10)
+                .setGraphStyle(Constants.GraphStyle.ROUNDRECT)
+                .build();
+        builder.addTargetView(header_imgbtn, configuration, new SimpleComponent())
+                .setAlpha(150);
         builder.setOnVisibilityChangedListener(new GuideBuilder.OnVisibilityChangedListener() {
             @Override
             public void onShown() {
@@ -65,8 +72,15 @@ public class SimpleGuideViewActivity extends Activity {
 
     public void showGuideView2() {
         final GuideBuilder builder1 = new GuideBuilder();
-        builder1.addTargetView(ll_nearby, Component.CIRCLE, new SimpleComponent())
-                .addTargetView(ll_video, Component.ROUNDRECT, new LottieComponent())
+        Configuration.HighLightAreaConfiguration configuration
+                = Configuration.HighLightAreaConfiguration
+                .builder()
+                .setPadding(ScreenUtils.dip2px(10))
+                .setCorner(10)
+                .setGraphStyle(Constants.GraphStyle.ROUNDRECT)
+                .build();
+        builder1.addTargetView(ll_nearby, configuration, new SimpleComponent())
+                .addTargetView(ll_video, configuration, new LottieComponent())
                 .setFullingColorId(R.color.color_green)
                 .setAlpha(50);
         builder1.setOnVisibilityChangedListener(new GuideBuilder.OnVisibilityChangedListener() {
@@ -86,11 +100,22 @@ public class SimpleGuideViewActivity extends Activity {
 
     public void showGuideView3() {
         final GuideBuilder builder1 = new GuideBuilder();
-        builder1.addTargetView(ll_video, Component.ROUNDRECT, new MutiComponent())
-                .addTargetView(ll_nearby, Component.CIRCLE, new LottieComponent())
+        Configuration.HighLightAreaConfiguration configuration
+                = Configuration.HighLightAreaConfiguration
+                .builder()
+                .setPadding(ScreenUtils.dip2px(20))
+                .setCorner(20)
+                .setGraphStyle(Constants.GraphStyle.ROUNDRECT)
+                .build();
+        Configuration.HighLightAreaConfiguration configuration1
+                = Configuration.HighLightAreaConfiguration
+                .builder()
+                .setPadding(ScreenUtils.dip2px(30))
+                .setGraphStyle(Constants.GraphStyle.CIRCLE)
+                .build();
+        builder1.addTargetView(ll_video, configuration, new MutiComponent())
+                .addTargetView(ll_nearby, configuration1, new LottieComponent())
                 .setAlpha(150)
-                .setHighTargetCorner(20)
-                .setHighTargetPadding(10)
                 .setExitAnimationId(android.R.anim.fade_out);
         builder1.setOnVisibilityChangedListener(new GuideBuilder.OnVisibilityChangedListener() {
             @Override
@@ -110,11 +135,22 @@ public class SimpleGuideViewActivity extends Activity {
 
     public void showGuideView4() {
         final GuideBuilder builder1 = new GuideBuilder();
-        builder1.addTargetView(ll_video, Component.ROUNDRECT, null)
-                .addTargetView(ll_nearby, Component.CIRCLE, null)
+        Configuration.HighLightAreaConfiguration configuration
+                = Configuration.HighLightAreaConfiguration
+                .builder()
+                .setPadding(ScreenUtils.dip2px(10))
+                .setCorner(10)
+                .setGraphStyle(Constants.GraphStyle.ROUNDRECT)
+                .build();
+        Configuration.HighLightAreaConfiguration configuration1
+                = Configuration.HighLightAreaConfiguration
+                .builder()
+                .setPadding(ScreenUtils.dip2px(80))
+                .setGraphStyle(Constants.GraphStyle.CIRCLE)
+                .build();
+        builder1.addTargetView(ll_video, configuration, null)
+                .addTargetView(ll_nearby, configuration1, null)
                 .setAlpha(150)
-                .setHighTargetCorner(20)
-                .setHighTargetPadding(10)
                 .setExitAnimationId(android.R.anim.fade_out)
                 .addComponent(new SimpleComponent(), 0)
                 .addComponent(new SimpleComponent(), 1)

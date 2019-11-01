@@ -1,6 +1,8 @@
 package com.blog.www.guideview;
 
+import android.support.annotation.AnimRes;
 import android.support.annotation.AnimatorRes;
+import android.support.annotation.ColorRes;
 import android.support.annotation.IdRes;
 import android.support.annotation.IntRange;
 import android.support.annotation.Nullable;
@@ -18,7 +20,8 @@ import java.util.List;
  * <h3>工作原理</h3>
  * <p>
  * 首先它需要一个目标View或者它的id,我们通过findViewById来得到这个View，计算它在屏幕上的区域targetRect,参见
- * {@link #setTargetViewId(int)}与{@link #setTargetView(View)}通过这个区域，
+ * {@link #addTargetViewId(int, Configuration.HighLightAreaConfiguration, Component)}
+ * 与{@link #addTargetView(View, Configuration.HighLightAreaConfiguration, Component)}}通过这个区域，
  * 开始绘制一个覆盖整个Activity的遮罩，可以定义蒙板的颜色{@link #setFullingColorId(int)}和透明度
  * {@link #setAlpha(int)}。然而目标View的区域不会被绘制从而实现高亮的效果。
  * </p>
@@ -73,7 +76,7 @@ public class GuideBuilder {
         mComponents = new ArrayList<>();
         mConfiguration.mTargetViewList = new ArrayList<>();
         mConfiguration.mTargetViewIdList = new ArrayList<>();
-        mConfiguration.mGraphStyleList = new ArrayList<>();
+        mConfiguration.mHighLightConfigurationList = new ArrayList<>();
     }
 
     /**
@@ -99,14 +102,27 @@ public class GuideBuilder {
      *
      * 如果高亮区域和component不对应，可能一个高亮区域对应多个component，建议单独调用addcomponent()传入需要绑定的高亮区域索引
      */
-    public GuideBuilder addTargetView(View v, int maskStyle, @Nullable Component guideComponent) {
+    public GuideBuilder addTargetView(View v,
+            Configuration.HighLightAreaConfiguration lightAreaConfiguration,
+            @Nullable Component guideComponent) {
         if (mBuilt) {
             throw new BuildException("Already created. rebuild a new one.");
         }
         mConfiguration.mTargetViewList.add(v);
-        setHighTargetGraphStyle(maskStyle);
         if (guideComponent != null) {
             addComponent(guideComponent, mConfiguration.mTargetViewList.indexOf(v));
+        }
+        if (lightAreaConfiguration == null) {
+            Configuration.HighLightAreaConfiguration defaultConfiguration
+                    = Configuration.HighLightAreaConfiguration
+                    .builder()
+                    .setPadding(15)
+                    .setGraphStyle(Constants.GraphStyle.ROUNDRECT)
+                    .setCorner(12)
+                    .build();
+            mConfiguration.mHighLightConfigurationList.add(defaultConfiguration);
+        } else {
+            mConfiguration.mHighLightConfigurationList.add(lightAreaConfiguration);
         }
         return this;
     }
@@ -117,39 +133,17 @@ public class GuideBuilder {
      * @param id 目标View的id
      * @return GuideBuilder
      */
-    public GuideBuilder setTargetViewId(@IdRes int id) {
+    public GuideBuilder addTargetViewId(@IdRes int id,
+            Configuration.HighLightAreaConfiguration lightAreaConfiguration,
+            @Nullable Component guideComponent) {
         if (mBuilt) {
             throw new BuildException("Already created. rebuild a new one.");
         }
         mConfiguration.mTargetViewIdList.add(id);
-        return this;
-    }
-
-    /**
-     * 设置高亮区域的圆角大小
-     *
-     * @return GuideBuilder
-     */
-    public GuideBuilder setHighTargetCorner(int corner) {
-        if (mBuilt) {
-            throw new BuildException("Already created. rebuild a new one.");
-        } else if (corner < 0) {
-            mConfiguration.mCorner = 0;
+        mConfiguration.mHighLightConfigurationList.add(lightAreaConfiguration);
+        if (guideComponent != null) {
+            addComponent(guideComponent, mConfiguration.mTargetViewIdList.indexOf(id));
         }
-        mConfiguration.mCorner = corner;
-        return this;
-    }
-
-    /**
-     * 设置高亮区域的图形样式
-     *
-     * @return GuideBuilder
-     */
-    private GuideBuilder setHighTargetGraphStyle(int style) {
-        if (mBuilt) {
-            throw new BuildException("Already created. rebuild a new one.");
-        }
-        mConfiguration.mGraphStyleList.add(style);
         return this;
     }
 
@@ -159,7 +153,7 @@ public class GuideBuilder {
      * @param id 资源id
      * @return GuideBuilder
      */
-    public GuideBuilder setFullingColorId(@IdRes int id) {
+    public GuideBuilder setFullingColorId(@ColorRes int id) {
         if (mBuilt) {
             throw new BuildException("Already created. rebuild a new one.");
         }
@@ -215,7 +209,7 @@ public class GuideBuilder {
      * @param id 退出动画的id
      * @return GuideBuilder
      */
-    public GuideBuilder setExitAnimationId(@AnimatorRes int id) {
+    public GuideBuilder setExitAnimationId(@AnimRes int id) {
         if (mBuilt) {
             throw new BuildException("Already created. rebuild a new one.");
         }
@@ -273,81 +267,6 @@ public class GuideBuilder {
      */
     public GuideBuilder setOutsideTouchable(boolean touchable) {
         mConfiguration.mOutsideTouchable = touchable;
-        return this;
-    }
-
-    /**
-     * 设置高亮区域的padding
-     *
-     * @return GuideBuilder
-     */
-    public GuideBuilder setHighTargetPadding(int padding) {
-        if (mBuilt) {
-            throw new BuildException("Already created. rebuild a new one.");
-        } else if (padding < 0) {
-            mConfiguration.mPadding = 0;
-        }
-        mConfiguration.mPadding = padding;
-        return this;
-    }
-
-    /**
-     * 设置高亮区域的左侧padding
-     *
-     * @return GuideBuilder
-     */
-    public GuideBuilder setHighTargetPaddingLeft(int padding) {
-        if (mBuilt) {
-            throw new BuildException("Already created. rebuild a new one.");
-        } else if (padding < 0) {
-            mConfiguration.mPaddingLeft = 0;
-        }
-        mConfiguration.mPaddingLeft = padding;
-        return this;
-    }
-
-    /**
-     * 设置高亮区域的顶部padding
-     *
-     * @return GuideBuilder
-     */
-    public GuideBuilder setHighTargetPaddingTop(int padding) {
-        if (mBuilt) {
-            throw new BuildException("Already created. rebuild a new one.");
-        } else if (padding < 0) {
-            mConfiguration.mPaddingTop = 0;
-        }
-        mConfiguration.mPaddingTop = padding;
-        return this;
-    }
-
-    /**
-     * 设置高亮区域的右侧padding
-     *
-     * @return GuideBuilder
-     */
-    public GuideBuilder setHighTargetPaddingRight(int padding) {
-        if (mBuilt) {
-            throw new BuildException("Already created. rebuild a new one.");
-        } else if (padding < 0) {
-            mConfiguration.mPaddingRight = 0;
-        }
-        mConfiguration.mPaddingRight = padding;
-        return this;
-    }
-
-    /**
-     * 设置高亮区域的底部padding
-     *
-     * @return GuideBuilder
-     */
-    public GuideBuilder setHighTargetPaddingBottom(int padding) {
-        if (mBuilt) {
-            throw new BuildException("Already created. rebuild a new one.");
-        } else if (padding < 0) {
-            mConfiguration.mPaddingBottom = 0;
-        }
-        mConfiguration.mPaddingBottom = padding;
         return this;
     }
 

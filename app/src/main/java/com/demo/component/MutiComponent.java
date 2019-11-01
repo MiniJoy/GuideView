@@ -1,6 +1,7 @@
 package com.demo.component;
 
 import com.blog.www.guideview.Component;
+import com.blog.www.guideview.Constants;
 import com.demo.guide.R;
 
 import android.view.LayoutInflater;
@@ -43,12 +44,12 @@ public class MutiComponent implements Component {
 
     @Override
     public int getAnchor() {
-        return Component.ANCHOR_BOTTOM;
+        return Constants.TargetAnchor.ANCHOR_BOTTOM;
     }
 
     @Override
     public int getFitPosition() {
-        return Component.FIT_CENTER;
+        return Constants.TargetAnchor.PARENT_CENTER;
     }
 
     @Override
@@ -63,6 +64,6 @@ public class MutiComponent implements Component {
 
     @Override
     public int getPositionPattern() {
-        return Component.SINGLE_POSITION_PATTERN;
+        return Constants.LocationWay.SINGLE_POSITION_PATTERN;
     }
 }
