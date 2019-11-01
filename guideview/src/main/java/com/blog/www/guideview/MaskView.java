@@ -431,6 +431,11 @@ class MaskView extends ViewGroup {
         }
     }
 
+    //note: 全局没有调用invalidate();和postInvalidate();方法去主动刷新视图，
+    //但是这个地方在给maskview设置补间动画之后会可能多次调用ondraw（）【动画的时候会调用ondraw】
+    //如果Component设置了lottie动画类型的，也会多次调用ondraw（）【动画的时候会调用ondraw】
+    //mMaskView.removeAllViews();会调用一次invalidate()；
+    //目前也没理解原因（验证了多次调用即因为动画引起）
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);

@@ -135,6 +135,7 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
         }
         vp.removeView(mMaskView);
         onDestroy();
+        mOnVisibilityChangedListener = null;
     }
 
     /**
@@ -164,10 +165,11 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
                 @Override
                 public void onAnimationEnd(Animation animation) {
                     vp.removeView(mMaskView);
+                    onDestroy();
                     if (mOnVisibilityChangedListener != null) {
                         mOnVisibilityChangedListener.onDismiss();
+                        mOnVisibilityChangedListener = null;
                     }
-                    onDestroy();
                 }
 
                 @Override
@@ -178,10 +180,11 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
             mMaskView.startAnimation(anim);
         } else {
             vp.removeView(mMaskView);
+            onDestroy();
             if (mOnVisibilityChangedListener != null) {
                 mOnVisibilityChangedListener.onDismiss();
+                mOnVisibilityChangedListener = null;
             }
-            onDestroy();
         }
     }
 
@@ -257,7 +260,6 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
         mComponents = null;
         mComponentTargetViewMap = null;
         mViewTargetViewHashMap = null;
-        mOnVisibilityChangedListener = null;
         mOnSlideListener = null;
         mMaskView.removeAllViews();
         mMaskView = null;
