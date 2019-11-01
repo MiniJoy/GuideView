@@ -140,9 +140,20 @@ public class GuideBuilder {
             throw new BuildException("Already created. rebuild a new one.");
         }
         mConfiguration.mTargetViewIdList.add(id);
-        mConfiguration.mHighLightConfigurationList.add(lightAreaConfiguration);
         if (guideComponent != null) {
             addComponent(guideComponent, mConfiguration.mTargetViewIdList.indexOf(id));
+        }
+        if (lightAreaConfiguration == null) {
+            Configuration.HighLightAreaConfiguration defaultConfiguration
+                    = Configuration.HighLightAreaConfiguration
+                    .builder()
+                    .setPadding(15)
+                    .setGraphStyle(Constants.GraphStyle.ROUNDRECT)
+                    .setCorner(12)
+                    .build();
+            mConfiguration.mHighLightConfigurationList.add(defaultConfiguration);
+        } else {
+            mConfiguration.mHighLightConfigurationList.add(lightAreaConfiguration);
         }
         return this;
     }
