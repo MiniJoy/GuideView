@@ -3,8 +3,8 @@
 buildscript {
 
     project.ext {
-        publishVersionCode = 4
-        publishVersionName = '1.0.3'
+        publishVersionCode = 5
+        publishVersionName = '1.0.4'
     }
 
     repositories {
