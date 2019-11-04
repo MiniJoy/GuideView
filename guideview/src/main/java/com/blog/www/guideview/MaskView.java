@@ -11,6 +11,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -32,6 +33,11 @@ class MaskView extends ViewGroup {
      * 高亮区域
      */
     private List<RectF> mTargetRectList = new ArrayList<>();
+
+    /**
+     * 高亮区域点击事件
+     */
+    private List<Action0> mTargetViewActions;
 
     /**
      * 蒙层区域
@@ -511,6 +517,25 @@ class MaskView extends ViewGroup {
         canvas.drawBitmap(mEraserBitmap, mOverlayRect.left, mOverlayRect.top, null);
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                if (mTargetViewActions != null) {
+                    for (int i = 0; i < mTargetRectList.size(); i++) {
+                        if (mTargetRectList.get(i).contains(event.getX(), event.getY())
+                                && mTargetViewActions.get(i) != null) {
+                            mTargetViewActions.get(i).call();
+                        }
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+
     public void setTargetRectList(List<Rect> rectList) {
         for (Rect rect : rectList) {
             RectF rectF = new RectF();
@@ -538,6 +563,10 @@ class MaskView extends ViewGroup {
 
     public void setComponentViewTargetViewMap(HashMap<View, Integer> viewTargetViewHashMap) {
         this.mComponentViewTargetViewMap = viewTargetViewHashMap;
+    }
+
+    public void setTargetViewOnClickListeners(List<Action0> targetViewActions) {
+        mTargetViewActions = targetViewActions;
     }
 
     static class LayoutParams extends ViewGroup.LayoutParams {

@@ -29,6 +29,11 @@ public class Configuration implements Parcelable {
     List<HighLightAreaConfiguration> mHighLightConfigurationList = null;
 
     /**
+     * target view 的点击事件响应
+     */
+    List<Action0> mTargetViewActions;
+
+    /**
      * 是否可以透过蒙层点击，默认不可以
      */
     boolean mOutsideTouchable = false;

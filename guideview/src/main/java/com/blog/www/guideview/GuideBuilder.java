@@ -20,8 +20,9 @@ import java.util.List;
  * <h3>工作原理</h3>
  * <p>
  * 首先它需要一个目标View或者它的id,我们通过findViewById来得到这个View，计算它在屏幕上的区域targetRect,参见
- * {@link #addTargetViewId(int, Configuration.HighLightAreaConfiguration, Component)}
- * 与{@link #addTargetView(View, Configuration.HighLightAreaConfiguration, Component)}}通过这个区域，
+ * {@link #addTargetViewId(int, Configuration.HighLightAreaConfiguration, Component, Action0)}
+ * 与{@link #addTargetView(View, Configuration.HighLightAreaConfiguration,
+ * Component, Action0)}}通过这个区域，
  * 开始绘制一个覆盖整个Activity的遮罩，可以定义蒙板的颜色{@link #setFullingColorId(int)}和透明度
  * {@link #setAlpha(int)}。然而目标View的区域不会被绘制从而实现高亮的效果。
  * </p>
@@ -77,6 +78,7 @@ public class GuideBuilder {
         mConfiguration.mTargetViewList = new ArrayList<>();
         mConfiguration.mTargetViewIdList = new ArrayList<>();
         mConfiguration.mHighLightConfigurationList = new ArrayList<>();
+        mConfiguration.mTargetViewActions = new ArrayList<>();
     }
 
     /**
@@ -96,15 +98,74 @@ public class GuideBuilder {
     }
 
     /**
-     * 设置目标view
+     * 添加目标view
+     */
+    public GuideBuilder addTargetView(View v) {
+        addTargetView(v, null, null, null);
+        return this;
+    }
+
+    /**
+     * 添加目标view
+     */
+    public GuideBuilder addTargetView(View v,
+            Configuration.HighLightAreaConfiguration lightAreaConfiguration) {
+        addTargetView(v, lightAreaConfiguration, null, null);
+        return this;
+    }
+
+    /**
+     * 添加目标view
+     */
+    public GuideBuilder addTargetView(View v, Component component) {
+        addTargetView(v, null, component, null);
+        return this;
+    }
+
+    /**
+     * 添加目标view
+     */
+    public GuideBuilder addTargetView(View v, Action0 clickListener) {
+        addTargetView(v, null, null, clickListener);
+        return this;
+    }
+
+    /**
+     * 添加目标view
+     */
+    public GuideBuilder addTargetView(View v, Component component, Action0 clickListener) {
+        addTargetView(v, null, component, clickListener);
+        return this;
+    }
+
+    /**
+     * 添加目标view
+     */
+    public GuideBuilder addTargetView(View v,
+            Configuration.HighLightAreaConfiguration configuration, Action0 clickListener) {
+        addTargetView(v, configuration, null, clickListener);
+        return this;
+    }
+
+    /**
+     * 添加目标view
+     */
+    public GuideBuilder addTargetView(View v,
+            Configuration.HighLightAreaConfiguration configuration, Component component) {
+        addTargetView(v, configuration, component, null);
+        return this;
+    }
+
+    /**
+     * 添加目标view
      *
      * 如果一个高亮区域对应一个component，建议使用此方法 同步传入component,将二者绑定
      *
      * 如果高亮区域和component不对应，可能一个高亮区域对应多个component，建议单独调用addcomponent()传入需要绑定的高亮区域索引
      */
     public GuideBuilder addTargetView(View v,
-            Configuration.HighLightAreaConfiguration lightAreaConfiguration,
-            @Nullable Component guideComponent) {
+            @Nullable Configuration.HighLightAreaConfiguration lightAreaConfiguration,
+            @Nullable Component guideComponent, @Nullable Action0 targetViewClickListener) {
         if (mBuilt) {
             throw new BuildException("Already created. rebuild a new one.");
         }
@@ -124,18 +185,78 @@ public class GuideBuilder {
         } else {
             mConfiguration.mHighLightConfigurationList.add(lightAreaConfiguration);
         }
+        mConfiguration.mTargetViewActions.add(targetViewClickListener);
         return this;
     }
 
     /**
-     * 设置目标View的id
+     * 添加目标view id
+     */
+    public GuideBuilder addTargetViewId(@IdRes int id) {
+        addTargetViewId(id, null, null, null);
+        return this;
+    }
+
+    /**
+     * 添加目标view
+     */
+    public GuideBuilder addTargetViewId(@IdRes int id,
+            Configuration.HighLightAreaConfiguration lightAreaConfiguration) {
+        addTargetViewId(id, lightAreaConfiguration, null, null);
+        return this;
+    }
+
+    /**
+     * 添加目标view
+     */
+    public GuideBuilder addTargetViewId(@IdRes int id, Component component) {
+        addTargetViewId(id, null, component, null);
+        return this;
+    }
+
+    /**
+     * 添加目标view
+     */
+    public GuideBuilder addTargetViewId(@IdRes int id, Action0 clickListener) {
+        addTargetViewId(id, null, null, clickListener);
+        return this;
+    }
+
+    /**
+     * 添加目标view
+     */
+    public GuideBuilder addTargetViewId(@IdRes int id, Component component, Action0 clickListener) {
+        addTargetViewId(id, null, component, clickListener);
+        return this;
+    }
+
+    /**
+     * 添加目标view
+     */
+    public GuideBuilder addTargetViewId(@IdRes int id,
+            Configuration.HighLightAreaConfiguration configuration, Action0 clickListener) {
+        addTargetViewId(id, configuration, null, clickListener);
+        return this;
+    }
+
+    /**
+     * 添加目标view
+     */
+    public GuideBuilder addTargetViewId(@IdRes int id,
+            Configuration.HighLightAreaConfiguration configuration, Component component) {
+        addTargetViewId(id, configuration, component, null);
+        return this;
+    }
+
+    /**
+     * 添加目标View的id
      *
      * @param id 目标View的id
      * @return GuideBuilder
      */
     public GuideBuilder addTargetViewId(@IdRes int id,
-            Configuration.HighLightAreaConfiguration lightAreaConfiguration,
-            @Nullable Component guideComponent) {
+            @Nullable Configuration.HighLightAreaConfiguration lightAreaConfiguration,
+            @Nullable Component guideComponent, @Nullable Action0 targetViewClickListener) {
         if (mBuilt) {
             throw new BuildException("Already created. rebuild a new one.");
         }
@@ -155,6 +276,7 @@ public class GuideBuilder {
         } else {
             mConfiguration.mHighLightConfigurationList.add(lightAreaConfiguration);
         }
+        mConfiguration.mTargetViewActions.add(targetViewClickListener);
         return this;
     }
 

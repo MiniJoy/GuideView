@@ -1,5 +1,6 @@
 package com.demo.aty;
 
+import com.blog.www.guideview.Action0;
 import com.blog.www.guideview.Configuration;
 import com.blog.www.guideview.Constants;
 import com.blog.www.guideview.Guide;
@@ -54,7 +55,14 @@ public class SimpleGuideViewActivity extends Activity {
                 .setCorner(10)
                 .setGraphStyle(Constants.GraphStyle.ROUNDRECT)
                 .build();
-        builder.addTargetView(header_imgbtn, configuration, new ScreenPositionComponent())
+        builder.addTargetView(header_imgbtn, configuration, new ScreenPositionComponent(),
+                new Action0() {
+                    @Override
+                    public void call() {
+                        Toast.makeText(getApplicationContext(), "TargetView被点击了",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                })
                 .setAlpha(150);
         builder.setOnVisibilityChangedListener(new GuideBuilder.OnVisibilityChangedListener() {
             @Override
@@ -80,8 +88,8 @@ public class SimpleGuideViewActivity extends Activity {
                 .setCorner(10)
                 .setGraphStyle(Constants.GraphStyle.ROUNDRECT)
                 .build();
-        builder1.addTargetView(ll_nearby, configuration, new SimpleComponent())
-                .addTargetView(ll_video, configuration, new LottieComponent())
+        builder1.addTargetView(ll_nearby, configuration, new SimpleComponent(), null)
+                .addTargetView(ll_video, configuration, new LottieComponent(), null)
                 .setFullingColorId(R.color.color_green)
                 .setAlpha(50);
         builder1.setOnVisibilityChangedListener(new GuideBuilder.OnVisibilityChangedListener() {
@@ -114,8 +122,8 @@ public class SimpleGuideViewActivity extends Activity {
                 .setPadding(ScreenUtils.dip2px(30))
                 .setGraphStyle(Constants.GraphStyle.CIRCLE)
                 .build();
-        builder1.addTargetView(ll_video, configuration, new MutiComponent())
-                .addTargetView(ll_nearby, configuration1, new LottieComponent())
+        builder1.addTargetView(ll_video, configuration, new MutiComponent(), null)
+                .addTargetView(ll_nearby, configuration1, new LottieComponent(), null)
                 .setAlpha(150)
                 .setExitAnimationId(android.R.anim.fade_out);
         builder1.setOnVisibilityChangedListener(new GuideBuilder.OnVisibilityChangedListener() {
@@ -149,8 +157,8 @@ public class SimpleGuideViewActivity extends Activity {
                 .setPadding(ScreenUtils.dip2px(80))
                 .setGraphStyle(Constants.GraphStyle.CIRCLE)
                 .build();
-        builder1.addTargetView(ll_video, configuration, null)
-                .addTargetView(ll_nearby, configuration1, null)
+        builder1.addTargetView(ll_video, configuration, null, null)
+                .addTargetView(ll_nearby, configuration1, null, null)
                 .setAlpha(150)
                 .setExitAnimationId(android.R.anim.fade_out)
                 .addComponent(new SimpleComponent(), 0)

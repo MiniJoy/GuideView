@@ -104,7 +104,7 @@ public class MyListActivity extends Activity {
                     .setPadding(ScreenUtils.dip2px(showTimes == 1 ? 20 : 40))
                     .setGraphStyle(Constants.GraphStyle.CIRCLE)
                     .build();
-            builder.addTargetView(targetView, configuration, new LottieComponent())
+            builder.addTargetView(targetView, configuration, new LottieComponent(), null)
                     .setAlpha(150)
                     .setOverlayTarget(false)
                     .setOutsideTouchable(false);

@@ -204,6 +204,7 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
         maskView.setFullingAlpha(mConfiguration.mAlpha);
         maskView.setHighTargetConfigutation(mConfiguration.mHighLightConfigurationList);
         maskView.setOverlayTarget(mConfiguration.mOverlayTarget);
+        maskView.setTargetViewOnClickListeners(mConfiguration.mTargetViewActions);
         maskView.setOnKeyListener(this);
 
         // For removing the height of status bar we need the root content view's
@@ -217,6 +218,7 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
             parentY = loc[1];
         }
 
+        //先判断有没有view list同时传进来view list和view ID list则后者会被忽略
         if (mConfiguration.mTargetViewList != null) {
             List<Rect> rects = new ArrayList<>(mConfiguration.mTargetViewList.size());
             for (View targetView : mConfiguration.mTargetViewList) {
@@ -299,6 +301,6 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
                 dismiss();
             }
         }
-        return true;
+        return false;
     }
 }
