@@ -44,12 +44,12 @@ public class MutiComponent implements Component {
 
     @Override
     public int getAnchor() {
-        return Constants.TargetAnchor.ANCHOR_BOTTOM;
+        return Constants.AnchorTargetView.ANCHOR_BOTTOM;
     }
 
     @Override
     public int getFitPosition() {
-        return Constants.TargetAnchor.PARENT_CENTER;
+        return Constants.AnchorTargetView.PARENT_CENTER;
     }
 
     @Override

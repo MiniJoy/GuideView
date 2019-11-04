@@ -29,12 +29,12 @@ public class SimpleComponent implements Component {
 
     @Override
     public int getAnchor() {
-        return Constants.TargetAnchor.ANCHOR_BOTTOM;
+        return Constants.AnchorTargetView.ANCHOR_BOTTOM;
     }
 
     @Override
     public int getFitPosition() {
-        return Constants.TargetAnchor.PARENT_END;
+        return Constants.AnchorTargetView.PARENT_END;
     }
 
     @Override

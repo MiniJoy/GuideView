@@ -6,6 +6,7 @@ import com.blog.www.guideview.Guide;
 import com.blog.www.guideview.GuideBuilder;
 import com.demo.component.LottieComponent;
 import com.demo.component.MutiComponent;
+import com.demo.component.ScreenPositionComponent;
 import com.demo.component.SimpleComponent;
 import com.demo.guide.R;
 import com.demo.utils.ScreenUtils;
@@ -53,7 +54,7 @@ public class SimpleGuideViewActivity extends Activity {
                 .setCorner(10)
                 .setGraphStyle(Constants.GraphStyle.ROUNDRECT)
                 .build();
-        builder.addTargetView(header_imgbtn, configuration, new SimpleComponent())
+        builder.addTargetView(header_imgbtn, configuration, new ScreenPositionComponent())
                 .setAlpha(150);
         builder.setOnVisibilityChangedListener(new GuideBuilder.OnVisibilityChangedListener() {
             @Override

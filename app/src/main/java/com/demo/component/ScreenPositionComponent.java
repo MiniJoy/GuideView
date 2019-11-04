@@ -12,7 +12,7 @@ import android.widget.Toast;
 /**
  * Created by binIoter on 16/6/17.
  */
-public class LottieComponent implements Component {
+public class ScreenPositionComponent implements Component {
 
     @Override
     public View getView(LayoutInflater inflater) {
@@ -29,7 +29,7 @@ public class LottieComponent implements Component {
 
     @Override
     public int getAnchor() {
-        return Constants.AnchorTargetView.ANCHOR_TOP;
+        return Constants.AnchorScreen.LEFT_BOTTOM;
     }
 
     @Override
@@ -44,11 +44,11 @@ public class LottieComponent implements Component {
 
     @Override
     public int getYOffset() {
-        return -30;
+        return 0;
     }
 
     @Override
     public int getPositionPattern() {
-        return Constants.LocationWay.SINGLE_POSITION_PATTERN;
+        return Constants.LocationWay.GLOBAL_POSITION_PATTERN;
     }
 }

@@ -14,12 +14,14 @@ public final class Constants {
 
     public interface LocationWay {
 
-        int GLOBAL_POSITION_PATTERN = 0;
+        int GLOBAL_LIGHT_AREA_POSITION_PATTERN = 0;
 
         int SINGLE_POSITION_PATTERN = 1;
+
+        int GLOBAL_POSITION_PATTERN = 2;
     }
 
-    public interface TargetAnchor {
+    public interface AnchorTargetView {
 
         int ANCHOR_LEFT = 0x01;
 
@@ -37,4 +39,19 @@ public final class Constants {
 
         int PARENT_END = 0x30;
     }
+
+
+    public interface AnchorScreen {
+
+        int LEFT_TOP = 0;
+
+        int RIGHT_TOP = 1;
+
+        int LEFT_BOTTOM = 2;
+
+        int RIGHT_BOTTOM = 3;
+
+        int SCREEN_CENTER = 4;
+    }
+
 }
