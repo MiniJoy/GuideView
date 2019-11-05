@@ -313,7 +313,8 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
                     || Math.abs(motionEvent.getY() - startY) > mSlop;
 
             int index = getTargetRectIndex(motionEvent.getX(), motionEvent.getY());
-            if (mConfiguration.mTargetViewActions != null && !mTouchResult && index >= 0) {
+            if (mConfiguration != null && mConfiguration.mTargetViewActions != null
+                    && !mTouchResult && index >= 0) {
                 mConfiguration.mTargetViewActions.get(index).call();
                 if (mConfiguration != null && mConfiguration.mClickTargetDismiss) {
                     dismiss();
@@ -328,7 +329,8 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
     }
 
     private int getTargetRectIndex(float x, float y) {
-        if (mMaskView.getTargetRectList() != null && mMaskView.getTargetRectList().size() > 0) {
+        if (mMaskView != null && mMaskView.getTargetRectList() != null
+                && mMaskView.getTargetRectList().size() > 0) {
             for (int i = 0; i < mMaskView.getTargetRectList().size(); i++) {
                 if (mMaskView.getTargetRectList().get(i).contains(x, y)
                         && mConfiguration.mTargetViewActions.get(i) != null) {
