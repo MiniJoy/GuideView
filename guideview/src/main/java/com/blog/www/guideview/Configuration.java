@@ -61,6 +61,11 @@ public class Configuration implements Parcelable {
     boolean mAutoDismiss = true;
 
     /**
+     * 是否在点击高亮区域的时候自动退出导航
+     */
+    boolean mClickTargetDismiss = true;
+
+    /**
      * 是否覆盖目标控件
      */
     boolean mOverlayTarget = false;
@@ -84,6 +89,7 @@ public class Configuration implements Parcelable {
         dest.writeInt(mFullingColorId);
         dest.writeList(mHighLightConfigurationList);
         dest.writeByte((byte) (mAutoDismiss ? 1 : 0));
+        dest.writeByte((byte) (mClickTargetDismiss ? 1 : 0));
         dest.writeByte((byte) (mOverlayTarget ? 1 : 0));
     }
 
@@ -97,6 +103,7 @@ public class Configuration implements Parcelable {
             conf.mFullingColorId = source.readInt();
             source.readList(conf.mHighLightConfigurationList, ClassLoader.getSystemClassLoader());
             conf.mAutoDismiss = source.readByte() == 1;
+            conf.mClickTargetDismiss = source.readByte() == 1;
             conf.mOverlayTarget = source.readByte() == 1;
             return conf;
         }

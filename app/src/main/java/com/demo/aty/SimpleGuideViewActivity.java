@@ -73,7 +73,7 @@ public class SimpleGuideViewActivity extends Activity {
             public void onDismiss() {
                 showGuideView2();
             }
-        });
+        }).setAutoDismiss(true).setClickTargetDismiss(true);
 
         Guide guide = builder.createGuide();
         guide.show(SimpleGuideViewActivity.this);

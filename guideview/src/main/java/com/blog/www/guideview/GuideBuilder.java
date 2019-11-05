@@ -309,6 +309,20 @@ public class GuideBuilder {
     }
 
     /**
+     * 是否在点击高亮区域的时候自动退出蒙板
+     *
+     * @param b true if needed
+     * @return GuideBuilder
+     */
+    public GuideBuilder setClickTargetDismiss(boolean b) {
+        if (mBuilt) {
+            throw new BuildException("Already created, rebuild a new one.");
+        }
+        mConfiguration.mClickTargetDismiss = b;
+        return this;
+    }
+
+    /**
      * 是否覆盖目标
      *
      * @param b true 遮罩将会覆盖整个屏幕

@@ -3,9 +3,11 @@ package com.blog.www.guideview;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Rect;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -51,6 +53,8 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
 
     private GuideBuilder.OnSlideListener mOnSlideListener;
 
+    private float mSlop;
+
     void setConfiguration(Configuration configuration) {
         mConfiguration = configuration;
     }
@@ -92,6 +96,8 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
         if (overlay == null) {
             overlay = (ViewGroup) activity.getWindow().getDecorView();
         }
+        mSlop = ViewConfiguration.get(activity.getApplicationContext())
+                .getScaledTouchSlop();
         if (mMaskView.getParent() == null && mConfiguration.mTargetViewList != null) {
             overlay.addView(mMaskView);
             if (mConfiguration.mEnterAnimationId != -1) {
@@ -204,7 +210,6 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
         maskView.setFullingAlpha(mConfiguration.mAlpha);
         maskView.setHighTargetConfigutation(mConfiguration.mHighLightConfigurationList);
         maskView.setOverlayTarget(mConfiguration.mOverlayTarget);
-        maskView.setTargetViewOnClickListeners(mConfiguration.mTargetViewActions);
         maskView.setOnKeyListener(this);
 
         // For removing the height of status bar we need the root content view's
@@ -263,8 +268,10 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
         mComponentTargetViewMap = null;
         mViewTargetViewHashMap = null;
         mOnSlideListener = null;
-        mMaskView.removeAllViews();
-        mMaskView = null;
+        if (mMaskView != null) {
+            mMaskView.removeAllViews();
+            mMaskView = null;
+        }
     }
 
     @Override
@@ -280,11 +287,15 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
         return false;
     }
 
-    float startY = -1f;
+    float startX;
+
+    float startY;
 
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
+        Log.d("Guide", "motionEvent.getAction() = " + motionEvent.getAction());
         if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+            startX = motionEvent.getX();
             startY = motionEvent.getY();
         } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
             if (startY - motionEvent.getY() > DimenUtil.dp2px(view.getContext(), SLIDE_THRESHOLD)) {
@@ -297,10 +308,32 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
                     mOnSlideListener.onSlideListener(GuideBuilder.SlideState.DOWN);
                 }
             }
-            if (mConfiguration != null && mConfiguration.mAutoDismiss) {
-                dismiss();
+
+            boolean mTouchResult = Math.abs(motionEvent.getX() - startX) > mSlop
+                    || Math.abs(motionEvent.getY() - startY) > mSlop;
+
+            int index = getTargetRectIndex(motionEvent.getX(), motionEvent.getY());
+            if (mConfiguration.mTargetViewActions != null && !mTouchResult && index >= 0) {
+                mConfiguration.mTargetViewActions.get(index).call();
+                if (mConfiguration != null && mConfiguration.mClickTargetDismiss) {
+                    dismiss();
+                }
+            } else {
+                if (mConfiguration != null && mConfiguration.mAutoDismiss) {
+                    dismiss();
+                }
             }
         }
-        return false;
+        return true;
+    }
+
+    private int getTargetRectIndex(float x, float y) {
+        for (int i = 0; i < mMaskView.getTargetRectList().size(); i++) {
+            if (mMaskView.getTargetRectList().get(i).contains(x, y)
+                    && mConfiguration.mTargetViewActions.get(i) != null) {
+                return i;
+            }
+        }
+        return -1;
     }
 }
