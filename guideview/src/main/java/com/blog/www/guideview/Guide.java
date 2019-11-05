@@ -328,10 +328,12 @@ public class Guide implements View.OnKeyListener, View.OnTouchListener {
     }
 
     private int getTargetRectIndex(float x, float y) {
-        for (int i = 0; i < mMaskView.getTargetRectList().size(); i++) {
-            if (mMaskView.getTargetRectList().get(i).contains(x, y)
-                    && mConfiguration.mTargetViewActions.get(i) != null) {
-                return i;
+        if (mMaskView.getTargetRectList() != null && mMaskView.getTargetRectList().size() > 0) {
+            for (int i = 0; i < mMaskView.getTargetRectList().size(); i++) {
+                if (mMaskView.getTargetRectList().get(i).contains(x, y)
+                        && mConfiguration.mTargetViewActions.get(i) != null) {
+                    return i;
+                }
             }
         }
         return -1;
